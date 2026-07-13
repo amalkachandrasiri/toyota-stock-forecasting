@@ -91,3 +91,5 @@ result = adfuller(toyota_df['Close_Diff'].dropna())
 
 print("ADF Statistic :", result[0])
 print("p-value       :", result[1])
+
+toyota_df.to_csv(config.PROCESSED_DATA_PATH)

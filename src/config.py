@@ -7,10 +7,10 @@ from typing import Final
 # =========================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-RAW_DATA_PATH = BASE_DIR / 'data' / 'raw_data' / 'toyota_dataset.csv'
 
-DATA_SMALL_PATH: Final[Path] = BASE_DIR / 'data' / 'processed_data' / 'dataset_small.csv'
-DATA_LARGE_PATH: Final[Path] = BASE_DIR / 'data' / 'processed_data' / 'dataset_large.csv'
+# data paths 
+RAW_DATA_PATH       = BASE_DIR / 'data' / 'raw_data' / 'toyota_dataset.csv'
+PROCESSED_DATA_PATH = BASE_DIR / 'data' / 'processed_data' / 'processed_dataset.csv'
 
 # report paths 
 CLOSE_PRICING_TRENDS : Final[Path] = BASE_DIR / 'reports' / 'close_pricing_trends.png'
