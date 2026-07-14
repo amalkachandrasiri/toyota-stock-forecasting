@@ -19,7 +19,6 @@ def build_model(train_df):
     '''
     Automatically selects the best ARIMA model.
     '''
-
     print('\nSearching Best ARIMA Model...\n')
 
     model = auto_arima(train_df['Close'], 
@@ -44,17 +43,13 @@ def build_model(train_df):
     return model
 
 # Forecast
-
 def forecast(model, test_df):
-    '''
-    Forecast the test period.
-    '''
-
     predictions = model.predict(n_periods=len(test_df))
+    predictions.index = test_df.index
+
     return predictions
 
 # Main Wrapper
-
 def run_arima(train_df, validation_df, test_df):
 
     print('=' * 60)

@@ -19,16 +19,19 @@ arima_df   = pd.read_csv(config.ARIMA_DATA_PATH,   index_col = 'Date', parse_dat
 
 results = []
 
+
+
 # print(arima_df.isna().sum())
 
 # ARIMA
 train, validation, test = train_validation_test_split(arima_df) 
 results.append(run_arima(train, validation, test))
 
+'''
 # XGBOOST
 train, validation, test = train_validation_test_split(xgboost_df) 
 results.append(run_xgboost(train, validation, test))
 
 print(results)
-
+'''
 

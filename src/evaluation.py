@@ -7,7 +7,10 @@ from sklearn.metrics import (
 
 def evaluate_model(actual, predicted, model_name):
 
-    mae = mean_absolute_error(actual, predicted)
+    actual    = np.array(actual)
+    predicted = np.array(predicted)
+
+    mae  = mean_absolute_error(actual, predicted)
     rmse = np.sqrt(mean_squared_error(actual, predicted))
     mape = np.mean(np.abs((actual - predicted) / actual)) * 100
 
