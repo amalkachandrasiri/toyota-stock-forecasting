@@ -1,132 +1,76 @@
 '''
-ARIMA Model Implementation
+Auto ARIMA Forecasting Model
 
 This module performs:
-1. Hyperparameter tuning using Grid Search
+1. Automatic parameter selection
 2. Model training
 3. Forecasting
-4. Model evaluation
+4. Performance evaluation
 '''
 
-import warnings
-warnings.filterwarnings('ignore')
-
 import pandas as pd
-import numpy as np
 
-from itertools import product
-
-from statsmodels.tsa.arima.model import ARIMA
-from sklearn.metrics import mean_squared_error
-
+from pmdarima import auto_arima
 from evaluation import evaluate_model
 
-# ===========
-# Grid Search
-# ===========
+# Find Best ARIMA Model
 
-def find_best_arima(train, validation):
+def build_model(train_df):
     '''
-    Performs grid search to determine the optimal
-    (p,d,q) parameters using the validation dataset.
-
-    Returns:
-        best_order
+    Automatically selects the best ARIMA model.
     '''
 
-    p_values = [0, 1, 2, 3]
-    d = 1                   # determined from ADF Test
-    q_values = [0, 1, 2, 3]
+    print('\nSearching Best ARIMA Model...\n')
 
-    best_rmse = float('inf')
-    best_order = None
+    model = auto_arima(train_df['Close'], 
+        seasonal=False,
+        information_criterion='aic',
+        start_p=0,
+        start_q=0,
+        max_p=5,
+        max_q=5,
+        d=1,                   # already confirmed d=1 using the ADF test
+        stepwise=True,
+        trace=True,
+        suppress_warnings=True,
+        error_action='ignore'
+    )
 
-    print('\nSearching for Best ARIMA Model...\n')
+    print('\n-------------------------------------')
+    print('Best ARIMA Model')
+    print(model.summary())
+    print('-------------------------------------\n')
 
-    for p, q in product(p_values, q_values):
-        order = (p, d, q)
-        try:
-            model = ARIMA(train['Close'], order = order)
-            fitted_model = model.fit()
+    return model
 
-            predictions = fitted_model.forecast(steps=len(validation))
-            rmse = np.sqrt(mean_squared_error(validation['Close'], predictions))
-
-            print(f'Order {order} -> RMSE = {rmse:.3f}')
-
-            if rmse < best_rmse:
-                best_rmse = rmse
-                best_order = order
-
-        except:
-            continue
-
-    print('\n---------------------------------------')
-    print('Best ARIMA Order :', best_order)
-    print(f'Validation RMSE : {best_rmse:.3f}')
-    print('---------------------------------------\n')
-
-    return best_order
-
-
-# =================
-# Train Final Model
-# =================
-
-def train_arima(train_validation, order):
-    '''
-    Train the final ARIMA model using
-    Train + Validation data.
-    '''
-
-    model = ARIMA(train_validation['Close'], order = order)
-    fitted_model = model.fit()
-
-    return fitted_model
-
-# ========
 # Forecast
-# ========
 
-def forecast_arima(model, test):
+def forecast(model, test_df):
     '''
-    Forecast future observations.
+    Forecast the test period.
     '''
 
-    predictions = model.forecast(steps = len(test))
+    predictions = model.predict(n_periods=len(test_df))
     return predictions
 
-
-# ============
 # Main Wrapper
-# ============
 
-def run_arima(train, validation, test):
-    '''
-    Complete ARIMA Pipeline
-
-    1. Hyperparameter tuning
-    2. Retrain on Train + Validation
-    3. Forecast Test Set
-    4. Evaluate
-    '''
+def run_arima(train_df, validation_df, test_df):
 
     print('=' * 60)
-    print('ARIMA MODEL')
+    print('AUTO ARIMA MODEL')
     print('=' * 60)
 
-    # Hyperparameter Tuning
-    best_order = find_best_arima(train, validation)
+    # Combine training and validation datasets
+    train_validation = pd.concat([train_df, validation_df])
 
-    # Combine Train + Validation
-    train_validation = pd.concat([train, validation])
-
-    # Train Final Model
-    model = train_arima(train_validation, best_order)
+    # Build model
+    model = build_model(train_validation)
 
     # Forecast
-    predictions = forecast_arima(model, test)
+    predictions = forecast(model, test_df)
 
-    # Evaluation
-    results = evaluate_model(test['Close'], predictions, 'ARIMA')
+    # Evaluate
+    results = evaluate_model(actual=test_df['Close'], predicted = predictions, model_name = 'Auto ARIMA')
+
     return results
