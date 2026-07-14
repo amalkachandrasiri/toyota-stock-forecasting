@@ -2,7 +2,7 @@ import yfinance as yf
 import config
 from statsmodels.tsa.stattools import adfuller
 
-def fetch_data():
+def fetch_raw_data():
     stock = yf.Ticker('7203.T')
     raw_data = stock.history(period='3y')
     raw_data.to_csv(config.RAW_DATA_PATH)
@@ -31,44 +31,73 @@ def describe_data(data):
     print('\nLast 5 Rows')
     print(data.tail())
 
-raw_data = fetch_data()
-# describe_data(raw_data)
+    # outlier detection 
+    Q1 = data['Close'].quantile(0.25)
+    Q3 = data['Close'].quantile(0.75)
 
-# delete dividents and stock split 
-toyota_df = raw_data.drop(columns=['Dividends','Stock Splits'])
+    IQR = Q3 - Q1
 
-# outlier detection 
-Q1 = toyota_df['Close'].quantile(0.25)
-Q3 = toyota_df['Close'].quantile(0.75)
+    lower = Q1 - 1.5 * IQR
+    upper = Q3 + 1.5 * IQR
 
-IQR = Q3 - Q1
+    outliers = data[(data['Close'] < lower) | (data['Close'] > upper)]
 
-lower = Q1 - 1.5 * IQR
-upper = Q3 + 1.5 * IQR
+    print('Number of outliers:', len(outliers))
 
-outliers = toyota_df[(toyota_df['Close'] < lower) | (toyota_df['Close'] > upper)]
+def data_cleaning(df):
+    # delete dividents and stock split 
+    df = df.drop(columns=['Dividends','Stock Splits'])
 
-print("Number of outliers:", len(outliers))
+    return df
 
-# ===================
-# Feature Engineering
-# ===================
+def create_arima_dataset(df): 
+    df = df.drop(columns=['Open','High', 'Low', 'Volume'])
+    return df
 
-# lag features 
-toyota_df['Lag_1'] = toyota_df['Close'].shift(1)
-toyota_df['Lag_7'] = toyota_df['Close'].shift(7)
-toyota_df['Lag_30'] = toyota_df['Close'].shift(30)
+def create_lstm_dataset(df): 
+    df = df.drop(columns=['Open','High', 'Low', 'Volume'])
+    return df
 
-# Rolling Statistics
-toyota_df['Rolling_Mean_7'] = toyota_df['Close'].rolling(7).mean()
-toyota_df['Rolling_STD_7'] = toyota_df['Close'].rolling(7).std()
-toyota_df['Rolling_Mean_30'] = toyota_df['Close'].rolling(30).mean()
+def create_xgboost_dataset(df):
+    # lag features 
+    df['Lag_1']  = df['Close'].shift(1)
+    df['Lag_7']  = df['Close'].shift(7)
+    df['Lag_30'] = df['Close'].shift(30)
 
-# Sesonal Indicators 
-toyota_df['Day_of_Week'] = toyota_df.index.dayofweek
-toyota_df['Month'] = toyota_df.index.month
-toyota_df['Quarter'] = toyota_df.index.quarter
+    # Rolling Statistics
+    df['Rolling_Mean_7']  = df['Close'].rolling(7).mean()
+    df['Rolling_STD_7']   = df['Close'].rolling(7).std()
+    df['Rolling_Mean_30'] = df['Close'].rolling(30).mean()
 
+    # Sesonal Indicators 
+    df['Day_of_Week'] = df.index.dayofweek
+    df['Month']       = df.index.month
+    df['Quarter']     = df.index.quarter
+
+    # Remove rows containing NaN values
+    df = df.dropna().reset_index(drop=True)
+
+    return df
+
+raw_data = fetch_raw_data()
+#describe_data(raw_data)
+cleaned_data = data_cleaning(raw_data)
+
+# create arima dataset - contains only date and close
+arima_df = create_arima_dataset(cleaned_data)
+arima_df.to_csv(config.ARIMA_DATA_PATH) 
+
+# create lstm dataset - contains only date and close
+lstm_df = create_lstm_dataset(cleaned_data)
+lstm_df.to_csv(config.LSTM_DATA_PATH)
+
+# create xgboost dataset - 
+xgb_df = create_xgboost_dataset(cleaned_data)
+xgb_df.to_csv(config.XGBOOST_DATA_PATH)
+
+print(xgb_df.isna().sum())
+
+'''
 # ==========================
 # Stationary Test - ADF Test
 # ==========================
@@ -76,12 +105,12 @@ toyota_df['Quarter'] = toyota_df.index.quarter
 # Augmented Dickey-Fuller Test
 result = adfuller(toyota_df['Close'])
 
-print("ADF Statistic :", result[0])
-print("p-value       :", result[1])
-print("Critical Values:")
+print('ADF Statistic :', result[0])
+print('p-value       :', result[1])
+print('Critical Values:')
 
 for key, value in result[4].items():
-    print(f"   {key}: {value}")
+    print(f'   {key}: {value}')
 
 # first differncing 
 toyota_df['Close_Diff'] = toyota_df['Close'].diff()
@@ -89,7 +118,6 @@ toyota_df['Close_Diff'] = toyota_df['Close'].diff()
 # rerun ADF test 
 result = adfuller(toyota_df['Close_Diff'].dropna())
 
-print("ADF Statistic :", result[0])
-print("p-value       :", result[1])
-
-toyota_df.to_csv(config.PROCESSED_DATA_PATH)
+print('ADF Statistic :', result[0])
+print('p-value       :', result[1])
+'''

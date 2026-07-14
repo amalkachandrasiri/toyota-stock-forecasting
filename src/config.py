@@ -12,6 +12,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_PATH       = BASE_DIR / 'data' / 'raw_data' / 'toyota_dataset.csv'
 PROCESSED_DATA_PATH = BASE_DIR / 'data' / 'processed_data' / 'processed_dataset.csv'
 
+ARIMA_DATA_PATH     = BASE_DIR / 'data' / 'processed_data' / 'arima_dataset.csv'
+XGBOOST_DATA_PATH   = BASE_DIR / 'data' / 'processed_data' / 'xgboost_dataset.csv'
+LSTM_DATA_PATH      = BASE_DIR / 'data' / 'processed_data' / 'lstm_dataset.csv'
+
 # report paths 
 CLOSE_PRICING_TRENDS : Final[Path] = BASE_DIR / 'reports' / 'close_pricing_trends.png'
 TRADING_VOLUME       : Final[Path] = BASE_DIR / 'reports' / 'trading_volume.png'
