@@ -24,3 +24,8 @@ DIST_DAILY_RETURNS   : Final[Path] = BASE_DIR / 'reports' / 'dist_daily_returns.
 OUTLIERS             : Final[Path] = BASE_DIR / 'reports' / 'outliers.png'
 MOVING_AVG_30_DAYS   : Final[Path] = BASE_DIR / 'reports' / 'moving_avg_30_days.png'
 TS_DECOMPOSITION     : Final[Path] = BASE_DIR / 'reports' / 'ts_decomposition.png'
+
+# GARCH
+DAILY_STK_RETURNS    : Final[Path] = BASE_DIR / 'reports' / 'daily_stock_returns.png'
+EST_CND_VOLATILITY   : Final[Path] = BASE_DIR / 'reports' / 'estimated_conditional_volatility.png'
+

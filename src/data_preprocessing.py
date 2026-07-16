@@ -52,12 +52,17 @@ def data_cleaning(df):
 
 def create_arima_dataset(df): 
     df = df.drop(columns=['Open','High', 'Low', 'Volume'])
+
     # Remove rows containing NaN values
     df = df.dropna()
     return df
 
 def create_lstm_dataset(df): 
     df = df.drop(columns=['Open','High', 'Low', 'Volume'])
+
+    # Remove rows containing NaN values
+    df = df.dropna()
+    
     return df
 
 def create_xgboost_dataset(df):
@@ -77,7 +82,7 @@ def create_xgboost_dataset(df):
     df['Quarter']     = df.index.quarter
 
     # Target (Next Day Close)
-    df['Target'] = df['Close'].shift(-1)
+    df['Target'] = df['Close'].shift(-1)   
 
     # Remove rows containing NaN values
     df = df.dropna()
@@ -93,19 +98,20 @@ arima_df = create_arima_dataset(cleaned_data)
 arima_df.to_csv(config.ARIMA_DATA_PATH) 
 
 # create lstm dataset - contains only date and close
-#lstm_df = create_lstm_dataset(cleaned_data)
-#lstm_df.to_csv(config.LSTM_DATA_PATH)
+lstm_df = create_lstm_dataset(cleaned_data)
+lstm_df.to_csv(config.LSTM_DATA_PATH)
 
 # create xgboost dataset - 
 xgb_df = create_xgboost_dataset(cleaned_data)
 xgb_df.to_csv(config.XGBOOST_DATA_PATH)
 
 # testing 
+'''
 print(xgb_df.head())
 print(xgb_df.tail())
 print(xgb_df.shape)
 print(xgb_df.isna().sum())
-
+'''
 
 '''
 # ==========================
